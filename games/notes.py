@@ -1,6 +1,8 @@
 import random
 import time
 
+import pygame
+
 import constants as const
 
 from ui import FretboardDisplay
@@ -10,7 +12,7 @@ from .base import GameBase
 
 
 class NameTheNote(GameBase):
-    """This game puts a dot on the fretboad and asks the user to name it"""
+    """This game puts a dot on the fretboad and asks the player to name it"""
 
     TITLE = 'Name the note'
 
@@ -35,6 +37,34 @@ class NameTheNote(GameBase):
             **self._model.game_stats
         ), True, (0, 0, 0))
         screen.blit(text, (10, 10))
+
+    def render_final_screen(self, screen):
+        font = self._config['fonts']['default']
+
+        title = font.render('~ Game over ~', True, (0, 0, 0))
+        duration = font.render('Duration: {}'.format(self.formatted_time()), True, (0, 0, 0))
+        total = font.render('Total notes: {}'.format(self._model.game_stats['total']), True, (0, 0, 0))
+        average = font.render('Average response time: {} seconds'.format(
+            self._model.game_stats['average_response_time']), True, (0, 0, 0))
+        accuracy = font.render('Accuracy: {}'.format(self._model.game_stats['accuracy']), True, (0, 0, 0))
+
+        stats_image = pygame.Surface((average.get_width() * 2, title.get_height() * 7))
+        stats_image.fill((255, 255, 255))
+
+        for i, image in enumerate([title, duration, total, average, accuracy]):
+            y = (i + 1) * (title.get_height() + 3)
+            rect = image.get_rect(center=(stats_image.get_width()/2, y))
+            stats_image.blit(image, rect)
+
+        pygame.draw.rect(
+            stats_image,
+            (0, 0, 0),
+            pygame.Rect(0, 0, stats_image.get_width()-1, stats_image.get_height()-1),
+            1
+        )
+
+        rect = stats_image.get_rect(center=(screen.get_width()/2, screen.get_height()/2))
+        screen.blit(stats_image, rect)
 
     def render_all_notes(self, screen):
         """Show all the notes on the fretboard"""
@@ -73,6 +103,10 @@ class NoteData:
         self.game_stats = {
             'correct': 0,
             'incorrect': 0,
+            'total': 0,
+            'accuracy': 0,
+            'total_response_time': 0,
+            'average_response_time': 0,
         }
 
         self._reset_active_notes()
@@ -101,9 +135,23 @@ class NoteData:
     def _reset_active_notes(self):
         self._active_notes = list(range(len(self.notes)))
 
+    def _calculate_stats(self, response_time):
+        """
+        Increments total notes and calculates the accuracy and average response time stats
+        :param response_time: current note's response time
+        """
+        self.game_stats['total'] += 1
+        self.game_stats['total_response_time'] += response_time
+        self.game_stats['average_response_time'] = \
+            round(self.game_stats['total_response_time'] / self.game_stats['total'], 2)
+
+        self.game_stats['accuracy'] = round(
+            100 * ((self.game_stats['total'] - self.game_stats['incorrect']) / self.game_stats['total']), 2)
+
     def choose_next_note(self):
         if self._current_note is not None:
             note_time = int(time.time() - self._note_start_time)
+            self._calculate_stats(note_time)
             if note_time <= 2:
                 # remove all notes that the user selects withint 2 seconds
                 print('removing {} {}'.format(

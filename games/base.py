@@ -16,6 +16,8 @@ class GameBase:
 
         self.state = self.READY
 
+        self._start_time = None
+
         self._config = global_config
 
         self._active_elements = []
@@ -53,10 +55,14 @@ class GameBase:
         text = self._config['fonts']['heading'].render(self.TITLE, True, (0, 0, 0))
         screen.blit(text, (screen.get_width() / 2 - text.get_width() / 2, 50))
 
-    def render_time(self, screen):
-        current_time = str(timedelta(seconds=int(time.time() - self._start_time)))
+    def _duration(self):
+        return int(time.time() - self._start_time)
 
-        text = self._config['fonts']['default'].render(current_time, True, (0, 0, 0))
+    def formatted_time(self):
+        return str(timedelta(seconds=self._duration()))
+
+    def render_time(self, screen):
+        text = self._config['fonts']['default'].render(self.formatted_time(), True, (0, 0, 0))
         screen.blit(text, (screen.get_width() - text.get_width() - 10, 10))
 
     def render(self, screen):
@@ -78,7 +84,7 @@ class GameBase:
             self.render_time(screen)
 
         elif self.state == self.FINISHED:
-            raise NotImplemented
+            self.render_final_screen(screen)
 
     def start(self):
         assert self.state == self.READY
@@ -113,6 +119,10 @@ class GameBase:
     def quit(self):
         self.state = self.FINISHED
 
+        self._active_elements = [
+            Button('main_menu', 'Return to main menu', Button.CENTRE, 400, font=self._config['fonts']['button'])
+        ]
+
     def handle_mouse_input(self, mouse_x, mouse_y):
         for elem in self._active_elements:
             if elem.is_clicked(mouse_x, mouse_y):
@@ -143,4 +153,7 @@ class GameBase:
         raise NotImplemented
 
     def render_game_screen(self, screen):
+        raise NotImplemented
+
+    def render_final_screen(self, screen):
         raise NotImplemented
