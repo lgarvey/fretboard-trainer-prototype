@@ -146,10 +146,10 @@ class GameBase:
         return False
 
     def render_start_screen(self, screen):
-        raise NotImplemented
+        raise NotImplementedError
 
     def render_game_screen(self, screen):
-        raise NotImplemented
+        raise NotImplementedError
 
     def render_final_screen(self, screen):
-        raise NotImplemented
+        raise NotImplementedError
