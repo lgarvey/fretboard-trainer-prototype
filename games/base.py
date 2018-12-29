@@ -1,7 +1,5 @@
-import time
-from datetime import timedelta
-
 from ui import Button
+from timer import GameTimer
 
 
 class GameBase:
@@ -16,7 +14,7 @@ class GameBase:
 
         self.state = self.READY
 
-        self._start_time = None
+        self._timer = GameTimer()
 
         self._config = global_config
 
@@ -55,14 +53,8 @@ class GameBase:
         text = self._config['fonts']['heading'].render(self.TITLE, True, (0, 0, 0))
         screen.blit(text, (screen.get_width() / 2 - text.get_width() / 2, 50))
 
-    def _duration(self):
-        return int(time.time() - self._start_time)
-
-    def formatted_time(self):
-        return str(timedelta(seconds=self._duration()))
-
     def render_time(self, screen):
-        text = self._config['fonts']['default'].render(self.formatted_time(), True, (0, 0, 0))
+        text = self._config['fonts']['default'].render(str(self._timer), True, (0, 0, 0))
         screen.blit(text, (screen.get_width() - text.get_width() - 10, 10))
 
     def render(self, screen):
@@ -89,7 +81,7 @@ class GameBase:
     def start(self):
         assert self.state == self.READY
 
-        self._start_time = time.time()
+        self._timer.start()
         self.state = self.PLAYING
 
         self._active_elements = [
@@ -101,7 +93,7 @@ class GameBase:
 
         self.state = self.PLAYING
 
-        # TODO: handle time logic
+        self._timer.resume()
 
         self._active_elements = [
             self._pause_button
@@ -112,12 +104,16 @@ class GameBase:
 
         self.state = self.PAUSED
 
+        self._timer.pause()
+
         self._active_elements = [
             self._resume_button
         ]
 
     def quit(self):
         self.state = self.FINISHED
+
+        self._timer.stop()
 
         self._active_elements = [
             Button('main_menu', 'Return to main menu', Button.CENTRE, 400, font=self._config['fonts']['button'])

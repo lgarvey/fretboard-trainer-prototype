@@ -42,7 +42,7 @@ class NameTheNote(GameBase):
         font = self._config['fonts']['default']
 
         title = font.render('~ Game over ~', True, (0, 0, 0))
-        duration = font.render('Duration: {}'.format(self.formatted_time()), True, (0, 0, 0))
+        duration = font.render('Duration: {}'.format(str(self._timer)), True, (0, 0, 0))
         total = font.render('Total notes: {}'.format(self._model.game_stats['total']), True, (0, 0, 0))
         average = font.render('Average response time: {} seconds'.format(
             self._model.game_stats['average_response_time']), True, (0, 0, 0))
@@ -72,8 +72,8 @@ class NameTheNote(GameBase):
             self._fretboard.render_dot(screen, note['fret'], note['string'])
 
     def start(self):
-        self._model.choose_next_note()
         super().start()
+        self._model.choose_next_note()
 
     def handle_mouse_input(self, mouse_x, mouse_y):
         super().handle_mouse_input(mouse_x, mouse_y)
