@@ -49,7 +49,7 @@ class FretboardDisplay:
             )
 
     def get_index(self, mouse_x, mouse_y):
-        """Take mouse coords and determine the fret and string that have been clicked"""
+        """Take mouse coords and determine the fret and string that has been clicked"""
 
         string_index = None
         fret_index = None
@@ -182,39 +182,3 @@ class Button:
 #         self._buttons = []
 #
 #         # for note in const.NOTES:
-
-
-
-# class TextDisplay:
-#     CENTRE = -1
-#
-#     def __init__(self, text, x, y, visible=True, font=None, colour=None):
-#         self.visible = visible
-#         self._visible_cycle_count = -1
-#         font = font or pygame.font.SysFont(None, 32)
-#         colour = colour or (0, 0, 0)
-#         self._text_image = font.render(text, True, colour)
-#         self._x = x
-#         self._y = y
-#
-#     def show(self, cycles=10):
-#         self._visible_cycle_count = cycles
-#         self.visible = True
-#
-#     def render(self, screen):
-#         if self.visible:
-#             if self._visible_cycle_count > 0:
-#                 self._visible_cycle_count -= 1
-#             elif self._visible_cycle_count == 0:
-#                 self.visible = False
-#
-#             x_pos = self._x
-#             y_pos = self._y
-#
-#             if self._x == self.CENTRE:
-#                 x_pos = screen.get_width() / 2 - self._text_image.get_width() / 2
-#
-#             if self._y == self.CENTRE:
-#                 y_pos = screen.get_height() / 2 - self._text_image.get_height() / 2
-#
-#             screen.blit(self.text_image, x_pos, y_pos)
