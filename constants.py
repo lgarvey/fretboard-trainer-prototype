@@ -1,6 +1,3 @@
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
-
 NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 NOTES_FLATS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 WHOLE_NOTES = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
@@ -19,12 +16,6 @@ GUITAR_DOTS = [
 
 GUITAR_STANDARD_TUNING = ['E', 'B', 'G', 'D', 'A', 'E']
 
-# migrate to fret class?
-FRET_WIDTH = 50
-STRING_SPACING = 20
-FRETBOARD_X_MARGIN = 50
-FRET_SPACING = (SCREEN_WIDTH - 2 * FRETBOARD_X_MARGIN) / 12
-
 C_SHAPE_MAJOR = [
     [0, 1, 3],
     [1, 3],
@@ -33,9 +24,3 @@ C_SHAPE_MAJOR = [
     [0, 1, 3],
     [1, 3],
 ]
-
-# -----
-# Colours
-
-COLOUR_SUCCESS = (153, 255, 153)
-COLOUR_FAILURE = (255, 153, 153)

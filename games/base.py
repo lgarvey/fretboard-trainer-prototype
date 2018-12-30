@@ -1,33 +1,48 @@
 from ui import Button
 from timer import GameTimer
+import pygame
+
+import config
 
 
-class GameBase:
-    # game states
+class Scene:
+    def __init__(self):
+        pass
+
+    def render(self, screen):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
+
+    def handle_event(self, event):
+        raise NotImplementedError
+
+
+class GameBase(Scene):
     READY = 1
     PLAYING = 2
     PAUSED = 3
     FINISHED = 4
 
-    def __init__(self, global_config, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._game_data = {}
 
         self.state = self.READY
 
         self._timer = GameTimer()
 
-        self._config = global_config
-
         self._active_elements = []
 
         self._start_button = Button(
-            'start_button', 'Start Game!', Button.CENTRE, 400, font=self._config['fonts']['button'])
+            'start_button', 'Start Game!', Button.CENTRE, 400)
 
         self._pause_button = Button(
-            'pause_button', 'Pause', Button.CENTRE, 400, font=self._config['fonts']['button'])
+            'pause_button', 'Pause', Button.CENTRE, 400)
 
         self._resume_button = Button(
-            'resume_button', 'Resume!', Button.CENTRE, 400, font=self._config['fonts']['button'])
+            'resume_button', 'Resume!', Button.CENTRE, 400)
 
         self._active_elements = [
             self._start_button
@@ -41,7 +56,7 @@ class GameBase:
             if self._game_data['_flash_background']['duration'] == 0:
                 self._game_data.pop('_flash_background')
         else:
-            screen.fill((255, 255, 255))
+            screen.fill(config.COLOUR_BACKGROUND)
 
     def flash_background(self, colour, duration):
         self._game_data['_flash_background'] = {
@@ -49,34 +64,36 @@ class GameBase:
             'duration': duration
         }
 
-    def render_header(self, screen):
-        text = self._config['fonts']['heading'].render(self.TITLE, True, (0, 0, 0))
+    def draw_header(self, screen):
+        text = config.FONTS['heading'].render(self.TITLE, True, config.COLOUR_DEFAULT)
         screen.blit(text, (screen.get_width() / 2 - text.get_width() / 2, 50))
 
-    def render_time(self, screen):
-        text = self._config['fonts']['default'].render(str(self._timer), True, (0, 0, 0))
+    def draw_time(self, screen):
+        text = config.FONTS['default'].render(str(self._timer), True, config.COLOUR_DEFAULT)
         screen.blit(text, (screen.get_width() - text.get_width() - 10, 10))
 
-    def render(self, screen):
+    def draw(self, screen):
         self.clear_screen(screen)
-        self.render_header(screen)
+        self.draw_header(screen)
 
         for elem in self._active_elements:
             elem.render(screen)
 
         if self.state == self.READY:
-            self.render_start_screen(screen)
+            self.draw_start_screen(screen)
 
         elif self.state == self.PLAYING:
-            self.render_time(screen)
+            self.draw_time(screen)
 
-            self.render_game_screen(screen)
+            self.draw_game_screen(screen)
 
         elif self.state == self.PAUSED:
-            self.render_time(screen)
+            self.draw_time(screen)
+
+            self.draw_pause_screen(screen)
 
         elif self.state == self.FINISHED:
-            self.render_final_screen(screen)
+            self.draw_final_screen(screen)
 
     def start(self):
         assert self.state == self.READY
@@ -116,8 +133,22 @@ class GameBase:
         self._timer.stop()
 
         self._active_elements = [
-            Button('main_menu', 'Return to main menu', Button.CENTRE, 400, font=self._config['fonts']['button'])
+            Button('main_menu', 'Return to main menu', Button.CENTRE, 400)
         ]
+
+    def handle_event(self, event):
+        if event.type == pygame.QUIT:
+            self.quit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            return self.handle_mouse_input(x, y)
+
+        if event.type == pygame.KEYDOWN:
+            self.handle_keyboard_input(event.key)
+
+    def update(self):
+        pass
 
     def handle_mouse_input(self, mouse_x, mouse_y):
         for elem in self._active_elements:
@@ -128,6 +159,12 @@ class GameBase:
                     self.resume()
                 elif elem.value == 'pause_button':
                     self.pause()
+                elif elem.value == 'main_menu':
+                    from scenes import MenuScene
+                    self.cleanup()
+                    return MenuScene()
+
+        return None
 
     def handle_keyboard_input(self, key_pressed):
         key = chr(key_pressed).upper()
@@ -145,11 +182,18 @@ class GameBase:
 
         return False
 
-    def render_start_screen(self, screen):
+    def cleanup(self):
+        if self._timer:
+            self._timer.stop()
+
+    def draw_start_screen(self, screen):
         raise NotImplementedError
 
-    def render_game_screen(self, screen):
+    def draw_game_screen(self, screen):
         raise NotImplementedError
 
-    def render_final_screen(self, screen):
+    def draw_final_screen(self, screen):
+        raise NotImplementedError
+
+    def draw_pause_screen(self, screen):
         raise NotImplementedError

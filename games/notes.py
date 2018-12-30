@@ -4,7 +4,7 @@ import time
 import pygame
 
 import constants as const
-
+import config
 from ui import FretboardDisplay
 from utils import NoteIterator
 
@@ -16,40 +16,43 @@ class NameTheNote(GameBase):
 
     TITLE = 'Name the note'
 
-    def __init__(self, global_config, game_config, *args, **kwargs):
-        super().__init__(global_config, *args, **kwargs)
+    def __init__(self, game_config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self._fretboard = FretboardDisplay()
         self._model = NoteData(game_config)
 
-    def render_start_screen(self, screen):
+    def draw_start_screen(self, screen):
         self._fretboard.render(screen)
-        self.render_all_notes(screen)
+        self.draw_all_notes(screen)
 
-    def render_game_screen(self, screen):
+    def draw_game_screen(self, screen):
         self._fretboard.render(screen)
-        self.render_stats(screen)
+        self.draw_stats(screen)
         current = self._model.get_current_note()
         self._fretboard.render_dot(screen, current['fret'], current['string'])
 
-    def render_stats(self, screen):
-        text = self._config['fonts']['default'].render('Correct {correct} // Incorrect {incorrect}'.format(
+    def draw_pause_screen(self, screen):
+        self._fretboard.render(screen)
+
+    def draw_stats(self, screen):
+        text = config.FONTS['default'].render('Correct {correct} // Incorrect {incorrect}'.format(
             **self._model.game_stats
-        ), True, (0, 0, 0))
+        ), True, config.COLOUR_DEFAULT)
         screen.blit(text, (10, 10))
 
-    def render_final_screen(self, screen):
-        font = self._config['fonts']['default']
+    def draw_final_screen(self, screen):
+        font = config.FONTS['default']
 
-        title = font.render('~ Game over ~', True, (0, 0, 0))
-        duration = font.render('Duration: {}'.format(str(self._timer)), True, (0, 0, 0))
-        total = font.render('Total notes: {}'.format(self._model.game_stats['total']), True, (0, 0, 0))
+        title = font.render('~ Game over ~', True, config.COLOUR_DEFAULT)
+        duration = font.render('Duration: {}'.format(str(self._timer)), True, config.COLOUR_DEFAULT)
+        total = font.render('Total notes: {}'.format(self._model.game_stats['total']), True, config.COLOUR_DEFAULT)
         average = font.render('Average response time: {} seconds'.format(
-            self._model.game_stats['average_response_time']), True, (0, 0, 0))
-        accuracy = font.render('Accuracy: {}'.format(self._model.game_stats['accuracy']), True, (0, 0, 0))
+            self._model.game_stats['average_response_time']), True, config.COLOUR_DEFAULT)
+        accuracy = font.render('Accuracy: {}'.format(self._model.game_stats['accuracy']), True, config.COLOUR_DEFAULT)
 
         stats_image = pygame.Surface((average.get_width() * 2, title.get_height() * 7))
-        stats_image.fill((255, 255, 255))
+        stats_image.fill(config.COLOUR_BACKGROUND)
 
         for i, image in enumerate([title, duration, total, average, accuracy]):
             y = (i + 1) * (title.get_height() + 3)
@@ -66,7 +69,7 @@ class NameTheNote(GameBase):
         rect = stats_image.get_rect(center=(screen.get_width()/2, screen.get_height()/2))
         screen.blit(stats_image, rect)
 
-    def render_all_notes(self, screen):
+    def draw_all_notes(self, screen):
         """Show all the notes on the fretboard"""
         for note in self._model.notes:
             self._fretboard.render_dot(screen, note['fret'], note['string'])
@@ -75,18 +78,15 @@ class NameTheNote(GameBase):
         super().start()
         self._model.choose_next_note()
 
-    def handle_mouse_input(self, mouse_x, mouse_y):
-        super().handle_mouse_input(mouse_x, mouse_y)
-
     def handle_keyboard_input(self, key_pressed):
         super().handle_keyboard_input(key_pressed)
         key = chr(key_pressed).upper()
 
         if self._model.valid_input(key):
             if self._model.handle_input(key):
-                self.flash_background(const.COLOUR_SUCCESS, 5)
+                self.flash_background(config.COLOUR_SUCCESS, 5)
             else:
-                self.flash_background(const.COLOUR_FAILURE, 5)
+                self.flash_background(config.COLOUR_FAILURE, 5)
 
 
 class NoteData:

@@ -3,9 +3,20 @@ from collections import namedtuple
 import pygame
 
 import constants as const
+import config
 
 
-class FretboardDisplay:
+class Element:
+    value = None
+
+    def is_clicked(self, x, y):
+        raise NotImplementedError
+
+    def render(self, screen):
+        raise NotImplementedError
+
+
+class FretboardDisplay(Element):
     """The fretboard display component"""
 
     Fret = namedtuple('Fret', ['x', 'mid_x', 'region_x', 'region_width'])
@@ -14,10 +25,10 @@ class FretboardDisplay:
     def __init__(self, frets=13, strings=6):
         self._frets = []
         self._strings = []
-        self._start_x = const.FRETBOARD_X_MARGIN
-        self._end_x = const.SCREEN_WIDTH - const.FRETBOARD_X_MARGIN
-        self._start_y = const.SCREEN_HEIGHT / 2 - ((strings / 2) * const.STRING_SPACING)
-        self._end_y = self._start_y + (strings - 1) * const.STRING_SPACING
+        self._start_x = config.FRETBOARD_X_MARGIN
+        self._end_x = config.SCREEN_WIDTH - config.FRETBOARD_X_MARGIN
+        self._start_y = config.SCREEN_HEIGHT / 2 - ((strings / 2) * config.STRING_SPACING)
+        self._end_y = self._start_y + (strings - 1) * config.STRING_SPACING
 
         self.generate_board(frets, strings)
 
@@ -28,23 +39,23 @@ class FretboardDisplay:
 
     def generate_board(self, frets, strings):
         for i in range(frets):
-            fret_x = self._start_x + i * const.FRET_SPACING
+            fret_x = self._start_x + i * config.FRET_SPACING
             self._frets.append(
                 self.Fret(
                     fret_x,
-                    fret_x - const.FRET_SPACING / 2 if i != 0 else fret_x,
-                    fret_x - const.FRET_SPACING if i != 0 else fret_x - 10,
-                    const.FRET_SPACING if i != 0 else 10,
+                    fret_x - config.FRET_SPACING / 2 if i != 0 else fret_x,
+                    fret_x - config.FRET_SPACING if i != 0 else fret_x - 10,
+                    config.FRET_SPACING if i != 0 else 10,
                 )
             )
         for i in range(strings):
-            string_y = self._start_y + i * const.STRING_SPACING
+            string_y = self._start_y + i * config.STRING_SPACING
             self._strings.append(
                 self.String(
                     string_y,
                     string_y,
-                    string_y - const.STRING_SPACING / 2,
-                    const.STRING_SPACING
+                    string_y - config.STRING_SPACING / 2,
+                    config.STRING_SPACING
                 )
             )
 
@@ -87,8 +98,8 @@ class FretboardDisplay:
 
         for fret_index, string_index in const.GUITAR_DOTS:
             pygame.draw.circle(screen, (0, 0, 0),
-                               (int(self._frets[fret_index].mid_x + const.FRET_SPACING),
-                                int(self._strings[string_index].mid_y + const.STRING_SPACING / 2)), 5, 0)
+                               (int(self._frets[fret_index].mid_x + config.FRET_SPACING),
+                                int(self._strings[string_index].mid_y + config.STRING_SPACING / 2)), 5, 0)
 
     def render_dot(self, screen, fret, string, colour=(64, 224, 208), shape=1):
         """Draw a dot in teh middle of the string"""
@@ -118,17 +129,17 @@ class FretboardDisplay:
         pygame.draw.rect(screen, colour, rect, 2)
 
 
-class Button:
+class Button(Element):
     CENTRE = -1
 
     def __init__(self, value, text, x, y, padding=10, width=None, height=None, font=None):
         self._x = x
         self._y = y
         self._text = text
-        font = font or pygame.font.SysFont(None, 32)
+        font = font or config.FONTS['button']
         self.value = value
 
-        text_image = font.render(text, True, (0, 0, 0))
+        text_image = font.render(text, True, config.COLOUR_DEFAULT)
 
         if not width:
             width = 2 * padding + text_image.get_width()
@@ -138,12 +149,12 @@ class Button:
 
         self._button = pygame.Surface((width, height))
 
-        self._button.fill((255, 255, 255))
+        self._button.fill(config.COLOUR_BACKGROUND)
 
         # put a box around the button
         pygame.draw.rect(
             self._button,
-            (0, 0, 0),
+            config.COLOUR_DEFAULT,
             pygame.Rect(0, 0, self._button.get_width()-1, self._button.get_height()-1),
             1
         )
@@ -171,14 +182,30 @@ class Button:
         return self._button_rect.collidepoint(mouse_x, mouse_y)
 
 
-# class ChromaticButtons:
-#     def __init__(self, y, font=font):
-#         self._x = x
-#         self._y = y
-#         self._text = text
-#         font = font or pygame.font.SysFont(None, 32)
-#         self.value = value
-#
-#         self._buttons = []
-#
-#         # for note in const.NOTES:
+class Text(Element):
+    CENTRE = -1
+
+    def __init__(self, text, x, y, font=None, colour=config.COLOUR_DEFAULT, *args, **kwargs):
+        self._x = x
+        self._y = y
+        self._coords = None
+        self._image = (font or config.FONTS['default']).render(text, True, colour)
+
+    def render(self, screen):
+        if not self._coords:
+            if self._x == self.CENTRE:
+                x_pos = screen.get_width() / 2 - self._image.get_width() / 2
+            else:
+                x_pos = self._x
+
+            if self._y == self.CENTRE:
+                y_pos = screen.get_height() / 2 - self._image.get_height() / 2
+            else:
+                y_pos = self._y
+
+            self._coords = (x_pos, y_pos)
+
+        screen.blit(self._image, self._coords)
+
+    def is_clicked(self, *args):
+        return False

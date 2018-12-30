@@ -1,33 +1,26 @@
 import pygame
 
-from games.notes import NameTheNote
-import constants as const
+import config
+from scenes import MenuScene
 
 
-def main_loop(global_config):
+def game_loop():
 
-    game_config = {
-        'tuning': const.GUITAR_STANDARD_TUNING
-    }
+    current_scene = MenuScene()
 
-    game = NameTheNote(global_config, game_config)
+    while True:
+        if pygame.event.get(pygame.QUIT):
+            current_scene.cleanup()
+            break
 
-    running = True
-
-    while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game.quit()
-                running = False
+            new_scene = current_scene.handle_event(event)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                game.handle_mouse_input(x, y)
+            if new_scene:
+                current_scene = new_scene
 
-            if event.type == pygame.KEYDOWN:
-                game.handle_keyboard_input(event.key)
-
-        game.render(screen)
+        current_scene.draw(screen)
+        current_scene.update()
 
         pygame.display.flip()
         clock.tick(60)
@@ -37,16 +30,10 @@ if __name__ == "__main__":
     pygame.init()
 
     clock = pygame.time.Clock()
-    screen = pygame.display.set_mode((640, 480))
+    screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 
-    game_config = {
-        'fonts': {
-            'heading': pygame.font.Font('fonts/Amatic-Bold.ttf', 72),
-            'button': pygame.font.Font('fonts/Amatic-Bold.ttf', 32),
-            'default': pygame.font.Font('fonts/Amatic-Bold.ttf', 25),
-        }
-    }
+    config.init_fonts()
 
-    main_loop(game_config)
+    game_loop()
 
     pygame.quit()
