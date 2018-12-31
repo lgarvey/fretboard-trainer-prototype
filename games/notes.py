@@ -49,7 +49,7 @@ class NameTheNote(GameBase):
         total = font.render('Total notes: {}'.format(self._model.game_stats['total']), True, config.COLOUR_DEFAULT)
         average = font.render('Average response time: {} seconds'.format(
             self._model.game_stats['average_response_time']), True, config.COLOUR_DEFAULT)
-        accuracy = font.render('Accuracy: {}'.format(self._model.game_stats['accuracy']), True, config.COLOUR_DEFAULT)
+        accuracy = font.render('Accuracy: {}%'.format(self._model.game_stats['accuracy']), True, config.COLOUR_DEFAULT)
 
         stats_image = pygame.Surface((average.get_width() * 2, title.get_height() * 7))
         stats_image.fill(config.COLOUR_BACKGROUND)

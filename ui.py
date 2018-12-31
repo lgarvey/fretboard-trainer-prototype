@@ -121,9 +121,9 @@ class FretboardDisplay(Element):
     def draw_bounding_box(self, screen, min_fret, max_fret, min_string, max_string, colour=(255, 0, 0)):
         rect = pygame.Rect(
             self._frets[min_fret].region_x - (10 if min_fret != 0 else 0),
-            self._strings[min_string].region_y,
-            self._frets[max_fret].region_x + self._frets[max_fret].region_width - self._frets[min_fret].region_x + 10,
-            self._strings[max_string].region_y + self._strings[max_string].region_height - self._strings[min_string].region_y
+            self._strings[min_string].region_y - 5,
+            self._frets[max_fret].region_x + self._frets[max_fret].region_width - self._frets[min_fret].region_x + 20,
+            self._strings[max_string].region_y + self._strings[max_string].region_height - self._strings[min_string].region_y + 10
         )
 
         pygame.draw.rect(screen, colour, rect, 2)
