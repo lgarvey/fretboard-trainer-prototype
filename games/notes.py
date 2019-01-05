@@ -88,6 +88,9 @@ class NameTheNote(GameBase):
             else:
                 self.flash_background(config.COLOUR_FAILURE, 5)
 
+    def handle_mouse_input(self, x, y):
+        pass
+
 
 class NoteData:
     def __init__(self, game_config):
@@ -195,3 +198,140 @@ class NoteData:
 
 class FindAllNotes(GameBase):
     """Find all notes on fretboard"""
+
+    TITLE = 'Find all the notes'
+
+    def __init__(self, game_config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._fretboard = FretboardDisplay()
+        self._model = FindTheNoteData(game_config)
+        self._restart_delay = None
+
+    def draw_start_screen(self, screen):
+        self._fretboard.render(screen)
+        self.draw_all_notes(screen)
+
+    def draw_note_text(self, screen):
+        if self._model.success():
+            text = config.FONTS['button'].render(
+                'Success!', True, config.COLOUR_DEFAULT
+            )
+        else:
+            text = config.FONTS['button'].render(
+                'Find all the {} notes'.format(self._model.current_note), True, config.COLOUR_DEFAULT)
+        rect = text.get_rect(center=(screen.get_width() / 2, 130))
+        screen.blit(text, rect)
+
+    def draw_game_screen(self, screen):
+        self._fretboard.render(screen)
+        self.draw_note_text(screen)
+        self.draw_selected_notes(screen)
+
+    def draw_pause_screen(self, screen):
+        self._fretboard.render(screen)
+
+    def draw_selected_notes(self, screen):
+        for note in self._model.get_selected_notes():
+            self._fretboard.render_dot(screen, note['fret'], note['string'], (255, 0, 0))
+
+    def draw_all_notes(self, screen):
+        """Show all the notes on the fretboard"""
+        for note in self._model.notes:
+            self._fretboard.render_dot(screen, note['fret'], note['string'])
+
+    def update(self):
+        if self._model.success() and not self._restart_delay:
+            self._restart_delay = 120
+
+        if self._restart_delay is not None:
+            self._restart_delay -= 1
+
+            if self._restart_delay <= 0:
+                self._restart_delay = None
+                self._model.choose_next_note()
+
+    def start(self):
+        super().start()
+        self._model.choose_next_note()
+        self._restart_delay = None
+
+    def handle_keyboard_input(self, key_pressed):
+        super().handle_keyboard_input(key_pressed)
+        key = chr(key_pressed).upper()
+
+    def handle_mouse_input(self, x, y):
+        index = self._fretboard.get_index(x, y)
+
+        if index:
+            if self._model.handle_note_selection(*index):
+                self.flash_background(config.COLOUR_SUCCESS, 5)
+            else:
+                self.flash_background(config.COLOUR_FAILURE, 5)
+
+
+class FindTheNoteData:
+    def __init__(self, game_config):
+        self._bounds = game_config.get('bounds', (0, 5, 0, 13))
+        self._tuning = game_config['tuning']
+
+        self._config = game_config
+
+        self.notes = self._build_note_list()
+
+        self._available_notes = None
+        self.current_note = None
+        self.current_note_list = []
+        self._found_note_indexes = set()
+        self._wrong_notes = 0
+
+    @staticmethod
+    def _get_available_notes():
+        notes = const.WHOLE_NOTES
+        random.shuffle(notes)
+        return notes
+
+    def choose_next_note(self):
+        if not self._available_notes:
+            self._available_notes = self._get_available_notes()
+
+        self.current_note = self._available_notes.pop()
+        self.current_note_list = [note for note in self.notes if note['note'] == self.current_note]
+        self._found_note_indexes = set()
+        self._wrong_notes = 0
+
+    def _build_note_list(self):
+        """Generate a 1d list of notes that maps to string/fret"""
+
+        notes = []
+
+        fret_count = self._bounds[3] - self._bounds[2]
+
+        for string_index in range(self._bounds[1] - self._bounds[0] + 1):
+            for fret_index, note in enumerate(NoteIterator(self._tuning[string_index], fret_count)):
+                if len(note) == 1:  # whole note
+                    notes.append({
+                        'fret': fret_index + self._bounds[2],
+                        'string': string_index,
+                        'note': note,
+                        'selected': 0,
+                        'incorrect': 0,
+                        'latency': None,
+                    })
+
+        return notes
+
+    def handle_note_selection(self, fret, string):
+        for i, note in enumerate(self.current_note_list):
+            if (fret, string) == (note['fret'], note['string']):
+                self._found_note_indexes.add(i)
+                return True
+
+        self._wrong_notes += 1
+        return False
+
+    def get_selected_notes(self):
+        return [self.current_note_list[index] for index in self._found_note_indexes]
+
+    def success(self):
+        return len(self.current_note_list) == len(self._found_note_indexes)

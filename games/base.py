@@ -66,7 +66,7 @@ class GameBase(Scene):
 
     def draw_header(self, screen):
         text = config.FONTS['heading'].render(self.TITLE, True, config.COLOUR_DEFAULT)
-        screen.blit(text, (screen.get_width() / 2 - text.get_width() / 2, 50))
+        screen.blit(text, (screen.get_width() / 2 - text.get_width() / 2, 10))
 
     def draw_time(self, screen):
         text = config.FONTS['default'].render(str(self._timer), True, config.COLOUR_DEFAULT)
@@ -142,7 +142,7 @@ class GameBase(Scene):
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            return self.handle_mouse_input(x, y)
+            return self._handle_mouse_input(x, y)
 
         if event.type == pygame.KEYDOWN:
             self.handle_keyboard_input(event.key)
@@ -150,21 +150,27 @@ class GameBase(Scene):
     def update(self):
         pass
 
-    def handle_mouse_input(self, mouse_x, mouse_y):
+    def _handle_mouse_input(self, mouse_x, mouse_y):
         for elem in self._active_elements:
             if elem.is_clicked(mouse_x, mouse_y):
                 if elem.value == 'start_button':
                     self.start()
+                    return
                 elif elem.value == 'resume_button':
                     self.resume()
+                    return
                 elif elem.value == 'pause_button':
                     self.pause()
+                    return
                 elif elem.value == 'main_menu':
                     from scenes import MenuScene
                     self.cleanup()
                     return MenuScene()
 
-        return None
+        return self.handle_mouse_input(mouse_x, mouse_y)
+
+    def handle_mouse_input(self, x, y):
+        raise NotImplementedError
 
     def handle_keyboard_input(self, key_pressed):
         key = chr(key_pressed).upper()

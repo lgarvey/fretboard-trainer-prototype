@@ -3,7 +3,7 @@ from ui import Button, Text
 
 from config import COLOUR_BACKGROUND, FONTS
 import constants as const
-from games.notes import NameTheNote
+from games.notes import NameTheNote, FindAllNotes
 from games.scales import FindScaleDegrees
 from games.base import Scene
 
@@ -47,7 +47,11 @@ class MenuScene(Scene):
 
                         return NameTheNote(game_config)
                     elif elem.value == 'play_findnotes':
-                        pass
+                        game_config = {
+                             'tuning': const.GUITAR_STANDARD_TUNING
+                        }
+
+                        return FindAllNotes(game_config)
                     elif elem.value == 'play_scaledegrees':
                         game_config = {
                             'tuning': const.GUITAR_STANDARD_TUNING,

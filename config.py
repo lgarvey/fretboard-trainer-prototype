@@ -25,6 +25,7 @@ COLOUR_BACKGROUND = (255, 255, 255)
 
 FONTS = {
     'heading': ('fonts/Amatic-Bold.ttf', 72),
+    'heading2': ('fonts/Amatic-Bold.ttf', 50),
     'button': ('fonts/Amatic-Bold.ttf', 32),
     'default': ('fonts/Amatic-Bold.ttf', 25),
 

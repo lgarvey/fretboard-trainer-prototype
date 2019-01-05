@@ -81,7 +81,7 @@ class FretboardDisplay(Element):
         if fret_index is not None and string_index is not None:
             return fret_index, string_index
 
-        return None, None
+        return None
 
     def render(self, screen):
 
